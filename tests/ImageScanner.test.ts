@@ -1,7 +1,4 @@
-import { Image } from '../Image';
-import { ImageScanner } from '../ImageScanner';
-import { Symbol } from '../Symbol';
-import { ZBarSymbolType, ZBarConfigType } from '../enum';
+import { Image, ImageScanner, ZBarSymbolType, ZBarConfigType } from 'bundle-umd';
 
 test('ImageScanner', async () => {
   const data = new Uint8Array([128, 128, 128, 128]);

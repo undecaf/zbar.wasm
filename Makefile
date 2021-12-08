@@ -1,7 +1,7 @@
 ZBAR_VERSION = 0.23.90
 ZBAR_SOURCE = zbar-$(ZBAR_VERSION)
-SRC_DIR = ./src
-TS_SRC ::= $(shell find $(SRC_DIR) -name '*.ts')
+TESTS_SRC = $(wildcard ./tests/*.test.ts)
+TESTS_DIST = $(patsubst ./tests/%.ts,./dist/%.js,$(TESTS_SRC))
 
 EM_VERSION = 3.0.0
 EM_DOCKER = docker run --rm -w /src -v $$PWD:/src emscripten/emsdk:$(EM_VERSION)
@@ -18,14 +18,22 @@ EMCC_FLAGS = -Os -Wall -Werror -s ALLOW_MEMORY_GROWTH=1 \
 	-s EXPORTED_FUNCTIONS="['_malloc','_free']" \
 	-s MODULARIZE=1 -s EXPORT_NAME=instantiate
 
-TSC = npx tsc
-TSC_FLAGS = -p ./
+BUNDLES = dist/bundle-esm.js dist/bundle-umd.js
 
-all: dist/zbar.wasm .ts
+TSC = npx tsc
+TSC_FLAGS = -p ./tsconfig-test.json
+
+ROLLUP = npx rollup
+ROLLUP_FLAGS = -c
+
+all: $(BUNDLES) $(TESTS_DIST)
 
 debug: $(ZBAR_DEPS) dist/zbar.wast src/module.c
 	$(EMCC) $(EMCC_FLAGS) -g2 -o dist/zbar-debug.js src/module.c $(ZBAR_INC) \
 		$(ZBAR_OBJS)
+
+$(BUNDLES): dist/zbar.wasm
+	$(ROLLUP) $(ROLLUP_FLAGS)
 
 dist/symbol.test.o: $(ZBAR_DEPS) src/symbol.test.c
 	$(EMCC) -Wall -Werror -g2 -c src/symbol.test.c -o $@ $(ZBAR_INC)
@@ -58,14 +66,14 @@ $(ZBAR_SOURCE)/configure: $(ZBAR_SOURCE).tar.gz
 $(ZBAR_SOURCE).tar.gz:
 	curl -L -o $(ZBAR_SOURCE).tar.gz https://linuxtv.org/downloads/zbar/zbar-$(ZBAR_VERSION).tar.gz
 
-.ts: $(TS_SRC)
+$(TESTS_DIST): $(TESTS_SRC)
 	$(TSC) $(TSC_FLAGS)
 
+.PHONY: clean
 clean:
-	rm $(ZBAR_SOURCE).tar.gz
-	rm -rf $(ZBAR_SOURCE)
-	rm dist/*.wasm
-	rm dist/*.js
-	rm dist/*.d.ts
-	rm dist/*.map
-	rm dist/*.o
+	-rm $(ZBAR_SOURCE).tar.gz
+	-rm -rf $(ZBAR_SOURCE)
+	-rm dist/*.wasm*
+	-rm dist/*.js
+	-rm dist/*.map
+	-rm dist/*.o

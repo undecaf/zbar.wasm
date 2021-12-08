@@ -1,4 +1,4 @@
-import { getInstance } from '../instance';
+import { getInstance } from 'bundle-umd';
 
 test('WASM Instance', async () => {
   const decoder = new TextDecoder();
