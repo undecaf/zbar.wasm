@@ -1,4 +1,4 @@
-import { Image, ImageScanner, ZBarSymbolType, ZBarConfigType } from 'bundle-umd';
+import { Image, ImageScanner, ZBarSymbolType, ZBarConfigType } from 'index.cjs';
 
 test('ImageScanner', async () => {
   const data = new Uint8Array([128, 128, 128, 128]);

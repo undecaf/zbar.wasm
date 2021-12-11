@@ -1,46 +1,53 @@
 import commonjs from '@rollup/plugin-commonjs'
-import multi from '@rollup/plugin-multi-entry'
 import nodePolyfills from 'rollup-plugin-polyfill-node'
-import resolve from '@rollup/plugin-node-resolve'
-import typescript from '@rollup/plugin-typescript'
+import ts from 'rollup-plugin-ts'
 import { terser } from 'rollup-plugin-terser'
 import pkg from './package.json'
 
-
 const plugins = [
-    multi(),
-    typescript({
-        include: ["./src/**/*"],
-        exclude: ["./tests/**/*"],
-    }),
-    resolve(),
-    commonjs(),
+    ts(),         // this just works, much preferred over @rollup/plugin-typescript
+    commonjs(),   // converts zbar.js to an ES6 module that can be imported
     terser(),
 ]
 
-
 export default [
     {
-        // ES module
-        input: ['src/module.ts', 'src/instance.ts', 'src/enum.ts', 'src/Image.ts', 'src/ImageScanner.ts', 'src/Symbol.ts', 'dist/zbar.js'],
+        // ES6 module and <script type="module">
+        input: 'src/index.ts',
         output: {
             file: pkg.module,
-            format: 'es',
+            format: 'esm',
+            generatedCode: 'es2015',
             sourcemap: true,
         },
+        external: ['path', 'fs'],
         plugins,
     },
 
     {
-        // Universal module (AMD, CommonJS, browser)
-        input: ['src/module.ts', 'src/instance.ts', 'src/enum.ts', 'src/Image.ts', 'src/ImageScanner.ts', 'src/Symbol.ts', 'dist/zbar.bin.js'],
+        // Plain <script>
+        input: 'src/index.ts',
         output: {
-            file: pkg.main,
-            format: 'umd',
+            file: pkg.unpkg,
+            format: 'iife',
+            generatedCode: 'es2015',
             sourcemap: true,
             globals: id => id,
-            name: 'ZbarWasm',
+            name: 'zbar',
         },
         plugins: [nodePolyfills(), ...plugins],
     },
+
+    {
+        // CommonJS (Node, Jest)
+        input: 'src/index.ts',
+        output: {
+            file: pkg.main,
+            format: 'cjs',
+            generatedCode: 'es2015',
+            sourcemap: true,
+        },
+        external: ['path', 'fs'],
+        plugins,
+    }
 ]

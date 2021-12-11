@@ -1,9 +1,9 @@
 import { getImageData } from './utils';
-import { getInstance, scanImageData } from 'bundle-umd';
+import { getInstance, scanImageData } from 'index.cjs';
 
 test('Multiple Scan Test', async () => {
   const inst = await getInstance();
-  const dir = __dirname + '/../tests/';
+  const dir = __dirname + '/../test/';
   let res;
   const img4 = await getImageData(dir + 'test4.png');
   res = await scanImageData(img4);

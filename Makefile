@@ -1,79 +1,78 @@
 ZBAR_VERSION = 0.23.90
-ZBAR_SOURCE = zbar-$(ZBAR_VERSION)
-TESTS_SRC = $(wildcard ./tests/*.test.ts)
-TESTS_DIST = $(patsubst ./tests/%.ts,./dist/%.js,$(TESTS_SRC))
+ZBAR_SRC = zbar-$(ZBAR_VERSION)
+
+SRC = src
+BUILD = build
+DIST = dist
+TEST = test
+TEST_TS = $(wildcard ./$(TEST)/*.test.ts)
+TEST_JS = $(patsubst ./$(TEST)/%.ts,./$(BUILD)/%.js,$(TEST_TS))
 
 EM_VERSION = 3.0.0
-EM_DOCKER = docker run --rm -w /src -v $$PWD:/src emscripten/emsdk:$(EM_VERSION)
+EM_DOCKER = docker run --rm -w /$(SRC) -v $$PWD:/$(SRC) emscripten/emsdk:$(EM_VERSION)
 EMCC = $(EM_DOCKER) emcc
-# EMXX = $(EM_DOCKER) em++
-WASM2WAT = $(EM_DOCKER) wasm2wat
 EMMAKE = $(EM_DOCKER) emmake
 EMCONFIG = $(EM_DOCKER) emconfigure
 
-ZBAR_DEPS = $(ZBAR_SOURCE)/make.done
-ZBAR_OBJS = $(ZBAR_SOURCE)/zbar/*.o $(ZBAR_SOURCE)/zbar/*/*.o
-ZBAR_INC = -I $(ZBAR_SOURCE)/include/ -I $(ZBAR_SOURCE)/
-EMCC_FLAGS = -Os -Wall -Werror -s ALLOW_MEMORY_GROWTH=1 \
+ZBAR_DEPS = $(ZBAR_SRC)/make.done
+ZBAR_OBJS = $(ZBAR_SRC)/zbar/*.o $(ZBAR_SRC)/zbar/*/*.o
+ZBAR_INC = -I $(ZBAR_SRC)/include/ -I $(ZBAR_SRC)/
+EMCC_FLAGS = -Oz -Wall -Werror -s ALLOW_MEMORY_GROWTH=1 \
 	-s EXPORTED_FUNCTIONS="['_malloc','_free']" \
-	-s MODULARIZE=1 -s EXPORT_NAME=instantiate
+	-s MODULARIZE=1 -s EXPORT_NAME=compiledWasm
 
-BUNDLES = dist/bundle-esm.js dist/bundle-umd.js
+BUNDLES = $(DIST)/index.esm.js $(DIST)/index.cjs.js $(DIST)/index.min.js
 
 TSC = npx tsc
-TSC_FLAGS = -p ./tsconfig-test.json
+TSC_FLAGS = -p ./tsconfig.test.json
 
 ROLLUP = npx rollup
 ROLLUP_FLAGS = -c
 
-all: $(BUNDLES) $(TESTS_DIST)
+.PHONY: all
+all: $(BUNDLES) $(TEST_JS)
 
-debug: $(ZBAR_DEPS) dist/zbar.wast src/module.c
-	$(EMCC) $(EMCC_FLAGS) -g2 -o dist/zbar-debug.js src/module.c $(ZBAR_INC) \
-		$(ZBAR_OBJS)
+.PHONY: dist
+dist: $(BUNDLES)
 
-$(BUNDLES): dist/zbar.wasm
+.PHONY: test
+test: $(TEST_JS)
+
+.PHONY: clean
+clean:
+	-rm $(ZBAR_SRC).tar.gz
+	-rm -rf $(ZBAR_SRC) $(DIST) $(BUILD)
+
+$(TEST_JS): $(TEST_TS) $(BUNDLES) tsconfig.json tsconfig.test.json
+	$(TSC) $(TSC_FLAGS)
+
+$(BUNDLES): $(BUILD)/zbar.wasm $(BUILD)/zbar.js $(SRC)/*.ts tsconfig.json rollup.config.js package.json
+	mkdir -p $(DIST)
 	$(ROLLUP) $(ROLLUP_FLAGS)
+	cp $(BUILD)/zbar.wasm* $(DIST)/
 
-dist/symbol.test.o: $(ZBAR_DEPS) src/symbol.test.c
-	$(EMCC) -Wall -Werror -g2 -c src/symbol.test.c -o $@ $(ZBAR_INC)
+$(BUILD)/zbar.wasm $(BUILD)/zbar.js: $(ZBAR_DEPS) $(SRC)/module.c $(BUILD)/symbol.test.o
+	$(EMCC) $(EMCC_FLAGS) -o $(BUILD)/zbar.js $(SRC)/module.c $(ZBAR_INC) $(ZBAR_OBJS)
 
-dist/zbar.wast: dist/zbar.wasm
-	$(WASM2WAT) dist/zbar.wasm -o dist/zbar.wast
+$(BUILD)/symbol.test.o: $(ZBAR_DEPS) $(TEST)/symbol.test.c
+	mkdir -p $(BUILD)
+	$(EMCC) -Wall -Werror -g2 -c $(TEST)/symbol.test.c -o $@ $(ZBAR_INC)
 
-dist/zbar.wasm: $(ZBAR_DEPS) src/module.c dist/symbol.test.o
-	$(EMCC) $(EMCC_FLAGS) -o dist/zbar.js src/module.c $(ZBAR_INC) \
-		$(ZBAR_OBJS)
-	cp dist/zbar.wasm dist/zbar.wasm.bin
-	sed 's/"zbar.wasm"/"zbar.wasm.bin"/g' dist/zbar.js > dist/zbar.bin.js
-
-$(ZBAR_DEPS): $(ZBAR_SOURCE)/Makefile
-	cd $(ZBAR_SOURCE) && $(EMMAKE) make CFLAGS=-Os CXXFLAGS=-Os \
+$(ZBAR_DEPS): $(ZBAR_SRC)/Makefile
+	cd $(ZBAR_SRC) && $(EMMAKE) make CFLAGS=-Os CXXFLAGS=-Os \
 		DEFS="-DZNO_MESSAGES -DHAVE_CONFIG_H"
 	touch -m $(ZBAR_DEPS)
 
-$(ZBAR_SOURCE)/Makefile: $(ZBAR_SOURCE)/configure
-	cd $(ZBAR_SOURCE) && $(EMCONFIG) ./configure --without-x --without-xshm \
+$(ZBAR_SRC)/Makefile: $(ZBAR_SRC)/configure
+	cd $(ZBAR_SRC) && $(EMCONFIG) ./configure --without-x --without-xshm \
 		--without-xv --without-jpeg --without-libiconv-prefix \
 		--without-imagemagick --without-npapi --without-gtk \
 		--without-python --without-qt --without-xshm --disable-video \
 		--disable-pthread --disable-assert
 
-$(ZBAR_SOURCE)/configure: $(ZBAR_SOURCE).tar.gz
-	tar zxvf $(ZBAR_SOURCE).tar.gz
-	touch -m $(ZBAR_SOURCE)/configure
+$(ZBAR_SRC)/configure: $(ZBAR_SRC).tar.gz
+	tar zxvf $(ZBAR_SRC).tar.gz
+	touch -m $(ZBAR_SRC)/configure
 
-$(ZBAR_SOURCE).tar.gz:
-	curl -L -o $(ZBAR_SOURCE).tar.gz https://linuxtv.org/downloads/zbar/zbar-$(ZBAR_VERSION).tar.gz
-
-$(TESTS_DIST): $(TESTS_SRC)
-	$(TSC) $(TSC_FLAGS)
-
-.PHONY: clean
-clean:
-	-rm $(ZBAR_SOURCE).tar.gz
-	-rm -rf $(ZBAR_SOURCE)
-	-rm dist/*.wasm*
-	-rm dist/*.js
-	-rm dist/*.map
-	-rm dist/*.o
+$(ZBAR_SRC).tar.gz:
+	curl -L -o $(ZBAR_SRC).tar.gz https://linuxtv.org/downloads/zbar/zbar-$(ZBAR_VERSION).tar.gz

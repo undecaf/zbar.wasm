@@ -1,15 +1,10 @@
-import { loadWasmInstance } from './load';
+import compiledWasm from 'zbar';
 import ZBar from './ZBar';
 
-let inst: ZBar | null = null;
+let inst: ZBar;
 
-const importObj = {
-  env: {
-  }
-};
-
-let instPromise = (async () => {
-  inst = await loadWasmInstance(importObj);
+const instPromise = (async () => {
+  inst = await compiledWasm();
   if (!inst) {
     throw Error('WASM was not loaded');
   }

@@ -1,7 +1,6 @@
 # Build
 zbar-*/
 zbar-*.tar.gz
-package-lock.json
 
 # Logs
 logs
@@ -64,3 +63,7 @@ typings/
 
 # next.js build output
 .next
+
+# Intermediate and distribution artifacts
+.build/
+.dist/

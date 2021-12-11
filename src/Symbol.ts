@@ -39,7 +39,7 @@ class SymbolPtr extends TypePointer {
     const len = this.HEAPU32[this.ptr32 + 7];
     const ptr = this.HEAPU32[this.ptr32 + 8];
     const ptr32 = ptr >> 2;
-    const res = [];
+    const res: Point[] = [];
     for (let i = 0; i < len; ++i) {
       const x = this.HEAP32[ptr32 + i * 2];
       const y = this.HEAP32[ptr32 + i * 2 + 1];
@@ -99,7 +99,7 @@ export class Symbol {
 
     const set = new SymbolSetPtr(ptr, buf);
     let symbol = set.head;
-    const res = [];
+    const res: Symbol[] = [];
     while (symbol !== null) {
       res.push(new Symbol(symbol));
       symbol = symbol.next;

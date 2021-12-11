@@ -1,4 +1,4 @@
-import { Image, Symbol } from 'bundle-umd';
+import { Image, Symbol } from 'index.cjs';
 
 test('Image', async () => {
   const data = new Uint8Array([128, 128, 128, 128]);

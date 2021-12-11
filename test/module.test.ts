@@ -1,8 +1,8 @@
 import { getImageData, imageDataToGrayBuffer } from './utils';
-import { ImageScanner, scanImageData, scanGrayBuffer, getDefaultScanner, ZBarSymbolType, ZBarConfigType } from 'bundle-umd';
+import { ImageScanner, scanImageData, scanGrayBuffer, getDefaultScanner, ZBarSymbolType, ZBarConfigType } from 'index.cjs';
 
 test('scanImageData', async () => {
-  const dir = __dirname + '/../tests/';
+  const dir = __dirname + '/../test/';
   let res;
   const img1 = await getImageData(dir + 'test1.png');
   res = await scanImageData(img1);
@@ -45,7 +45,7 @@ test('scanImageData', async () => {
 });
 
 test('Barcode', async () => {
-  const dir = __dirname + '/../tests/';
+  const dir = __dirname + '/../test/';
   let res;
   const img5 = await getImageData(dir + 'test5.png');
   res = await scanImageData(img5);
