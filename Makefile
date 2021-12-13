@@ -30,7 +30,7 @@ ROLLUP = npx rollup
 ROLLUP_FLAGS = -c
 
 .PHONY: all
-all: $(BUNDLES) $(TEST_JS)
+all: $(BUNDLES) $(TEST_JS) $(DIST)/zbar.wasm
 
 .PHONY: dist
 dist: $(BUNDLES)
@@ -46,10 +46,13 @@ clean:
 $(TEST_JS): $(TEST_TS) $(BUNDLES) tsconfig.json tsconfig.test.json
 	$(TSC) $(TSC_FLAGS)
 
-$(BUNDLES): $(BUILD)/zbar.wasm $(BUILD)/zbar.js $(SRC)/*.ts tsconfig.json rollup.config.js package.json
+$(BUNDLES): $(BUILD)/zbar.js $(SRC)/*.ts tsconfig.json rollup.config.js package.json
 	mkdir -p $(DIST)
 	$(ROLLUP) $(ROLLUP_FLAGS)
-	cp $(BUILD)/zbar.wasm* $(DIST)/
+
+$(DIST)/zbar.wasm: $(BUILD)/zbar.wasm
+	mkdir -p $(DIST)
+	cp $(BUILD)/zbar.wasm $(DIST)/
 
 $(BUILD)/zbar.wasm $(BUILD)/zbar.js: $(ZBAR_DEPS) $(SRC)/module.c $(BUILD)/symbol.test.o
 	$(EMCC) $(EMCC_FLAGS) -o $(BUILD)/zbar.js $(SRC)/module.c $(ZBAR_INC) $(ZBAR_OBJS)

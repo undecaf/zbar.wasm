@@ -1,7 +1,7 @@
 import compiledWasm from 'zbar';
-import ZBar from './ZBar';
+import ZBarInstance from './ZBarInstance';
 
-let inst: ZBar;
+let inst: ZBarInstance;
 
 const instPromise = (async () => {
   inst = await compiledWasm();
@@ -11,6 +11,6 @@ const instPromise = (async () => {
   return inst;
 })();
 
-export const getInstance = async (): Promise<ZBar> => {
+export const getInstance = async (): Promise<ZBarInstance> => {
   return await instPromise;
 };

@@ -2,8 +2,8 @@ import { execSync } from 'child_process';
 
 test('NPM package content', () => {
     const expectedFiles = [ 
-        /^LICENSE$/, 
-        /^README\.md$/, 
+        /^LICEN[CS]E(\..*)?$/i, 
+        /^README(\..*)?$/i, 
         /^package\.json$/, 
         /^dist\/index\.(esm|cjs|min)\.(js(\.map)?|d\.ts)$/,
         /^dist\/zbar\.wasm(\.bin)?$/,
