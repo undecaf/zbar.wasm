@@ -20,7 +20,7 @@ export default [
             generatedCode: 'es2015',
             sourcemap: true,
         },
-        external: ['path', 'fs'],
+        external: ['path', 'fs', './zbar.wasm'],
         plugins,
     },
 
@@ -35,6 +35,7 @@ export default [
             globals: id => id,
             name: 'zbar',
         },
+        external: ['./zbar.wasm'],
         plugins: [nodePolyfills(), ...plugins],
     },
 
@@ -47,7 +48,7 @@ export default [
             generatedCode: 'es2015',
             sourcemap: true,
         },
-        external: ['path', 'fs'],
+        external: ['path', 'fs', './zbar.wasm'],
         plugins,
     }
 ]
