@@ -1,6 +1,6 @@
 import { Image } from './Image';
 import { ImageScanner } from './ImageScanner';
-import { Symbol } from './Symbol';
+import { ZBarSymbol } from './ZBarSymbol';
 
 const defaultScannerPromise = ImageScanner.create();
 export const getDefaultScanner = async () => {
@@ -10,7 +10,7 @@ export const getDefaultScanner = async () => {
 const scanImage = async (
   image: Image,
   scanner?: ImageScanner
-): Promise<Array<Symbol>> => {
+): Promise<Array<ZBarSymbol>> => {
   if (scanner === undefined) {
     scanner = await defaultScannerPromise;
   }
@@ -27,7 +27,7 @@ export const scanGrayBuffer = async (
   width: number,
   height: number,
   scanner?: ImageScanner
-): Promise<Array<Symbol>> => {
+): Promise<Array<ZBarSymbol>> => {
   const image = await Image.createFromGrayBuffer(width, height, buffer);
   const res = await scanImage(image, scanner);
   image.destroy();
@@ -39,7 +39,7 @@ export const scanRGBABuffer = async (
   width: number,
   height: number,
   scanner?: ImageScanner
-): Promise<Array<Symbol>> => {
+): Promise<Array<ZBarSymbol>> => {
   const image = await Image.createFromRGBABuffer(width, height, buffer);
   const res = await scanImage(image, scanner);
   image.destroy();
@@ -49,7 +49,7 @@ export const scanRGBABuffer = async (
 export const scanImageData = async (
   image: ImageData,
   scanner?: ImageScanner
-): Promise<Array<Symbol>> => {
+): Promise<Array<ZBarSymbol>> => {
   return await scanRGBABuffer(
     image.data.buffer,
     image.width,

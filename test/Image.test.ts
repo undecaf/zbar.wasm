@@ -1,8 +1,8 @@
-import { Image, Symbol } from 'index.cjs';
+import { Image, ZBarSymbol } from 'index.cjs';
 
 test('Image', async () => {
   const data = new Uint8Array([128, 128, 128, 128]);
-  let image: Image, syms: Array<Symbol>;
+  let image: Image, syms: Array<ZBarSymbol>;
   image = await Image.createFromGrayBuffer(2, 2, data.buffer);
   syms = image.getSymbols();
   expect(syms).toHaveLength(0);

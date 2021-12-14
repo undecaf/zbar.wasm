@@ -1,7 +1,7 @@
 import { CppObject } from './CppObject';
 import { Image } from './Image';
 import { getInstance } from './instance';
-import { Symbol } from './Symbol';
+import { ZBarSymbol } from './ZBarSymbol';
 import { ZBarSymbolType, ZBarConfigType } from './enum';
 
 export class ImageScanner extends CppObject {
@@ -32,10 +32,10 @@ export class ImageScanner extends CppObject {
     this.inst._ImageScanner_recycle_image(this.ptr, image.getPointer());
   }
 
-  getResults(): Array<Symbol> {
+  getResults(): Array<ZBarSymbol> {
     this.checkAlive();
     const res = this.inst._ImageScanner_get_results(this.ptr);
-    return Symbol.createSymbolsFromPtr(res, this.inst.HEAPU8.buffer);
+    return ZBarSymbol.createSymbolsFromPtr(res, this.inst.HEAPU8.buffer);
   }
 
   scan(image: Image): number {

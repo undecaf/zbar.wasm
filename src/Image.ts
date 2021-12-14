@@ -1,5 +1,5 @@
 import { CppObject } from './CppObject';
-import { Symbol } from './Symbol';
+import { ZBarSymbol } from './ZBarSymbol';
 import { getInstance } from './instance';
 
 export class Image extends CppObject {
@@ -66,9 +66,9 @@ export class Image extends CppObject {
     this.ptr = 0;
   }
 
-  getSymbols(): Array<Symbol> {
+  getSymbols(): Array<ZBarSymbol> {
     this.checkAlive();
     const res = this.inst._Image_get_symbols(this.ptr);
-    return Symbol.createSymbolsFromPtr(res, this.inst.HEAPU8.buffer);
+    return ZBarSymbol.createSymbolsFromPtr(res, this.inst.HEAPU8.buffer);
   }
 }
