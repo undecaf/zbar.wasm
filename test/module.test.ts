@@ -1,5 +1,5 @@
 import { getImageData, imageDataToGrayBuffer } from './utils';
-import { ImageScanner, scanImageData, scanGrayBuffer, getDefaultScanner, ZBarSymbolType, ZBarConfigType } from 'index.cjs';
+import { ImageScanner, scanImageData, scanGrayBuffer, getDefaultScanner, ZBarSymbolType, ZBarConfigType, ZBarOrientation } from 'index.cjs';
 
 test('scanImageData', async () => {
   const dir = __dirname + '/../test/';
@@ -92,8 +92,34 @@ test('Barcode', async () => {
   expect(res[0].type).toEqual(ZBarSymbolType.ZBAR_EAN13);
   expect(res[0].decode()).toEqual('9781234567897');
 
+  const img6 = await getImageData(dir + 'test6.png');
+  const orientations: Record<string, ZBarOrientation> = {
+    'UP': ZBarOrientation.ZBAR_ORIENT_UP,
+    'DOWN': ZBarOrientation.ZBAR_ORIENT_DOWN,
+    'LEFT': ZBarOrientation.ZBAR_ORIENT_LEFT,
+    'RIGHT': ZBarOrientation.ZBAR_ORIENT_RIGHT
+  };
+
+  expect(
+    scanner.setConfig(
+      ZBarSymbolType.ZBAR_CODE39,
+      ZBarConfigType.ZBAR_CFG_ENABLE,
+      1
+    )
+  ).toEqual(0);
+  res = await scanImageData(img6, scanner);
+  expect(res).toHaveLength(4);
+  res.forEach(r => {
+    const decoded = r.decode();
+    const expectedOrientation = orientations[decoded];
+
+    expect(r.type).toEqual(ZBarSymbolType.ZBAR_CODE39);
+    expect(expectedOrientation).toBeDefined();
+    expect(r.orientation).toEqual(expectedOrientation);
+  })
+
   scanner.destroy();
-  await expect(scanImageData(img5, scanner)).rejects.toThrow(
+  await expect(scanImageData(img6, scanner)).rejects.toThrow(
     'Call after destroyed'
   );
 });
